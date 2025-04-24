@@ -58,6 +58,14 @@ public class HoneywellScannerModule extends ReactContextBaseJavaModule implement
         WritableMap params = Arguments.createMap();
         params.putString("data", barcodeReadEvent.getBarcodeData());
         sendEvent(BARCODE_READ_SUCCESS, params);
+
+        if (reader != null) {
+            try {
+                reader.softwareTrigger(false);
+            } catch (ScannerNotClaimedException | ScannerUnavailableException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -106,6 +114,17 @@ public class HoneywellScannerModule extends ReactContextBaseJavaModule implement
             manager.close();
         }
         promise.resolve(null);
+    }
+
+    @ReactMethod
+    public void read() {
+        if (reader != null) {
+            try {
+                reader.softwareTrigger(true);
+            } catch (ScannerNotClaimedException | ScannerUnavailableException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private boolean isCompatible() {
