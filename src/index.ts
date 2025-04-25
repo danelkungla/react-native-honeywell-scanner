@@ -1,44 +1,41 @@
-import { NativeModules, NativeEventEmitter } from 'react-native';
+import { Platform, NativeModules, NativeEventEmitter } from 'react-native';
 
-const { HoneywellScanner } = NativeModules;
+let HoneywellScanner = {};
 
-/**
- * Listen for available events
- * @param  {String} eventName Name of event one of barcodeReadSuccess, barcodeReadFail
- * @param  {Function} handler Event handler
- */
+if (Platform.OS === 'android') {
+  const NativeHoneywellScanner = NativeModules.HoneywellScanner;
+  const barcodeReaderEmitter = new NativeEventEmitter(NativeHoneywellScanner);
 
-const barcodeReaderEmitter = new NativeEventEmitter(HoneywellScanner);
+  let subscriptionBarcodeReadSuccess = null;
+  let subscriptionBarcodeReadFail = null;
 
-var subscriptionBarcodeReadSuccess = null;
-var subscriptionBarcodeReadFail = null;
+  HoneywellScanner = {
+    ...NativeHoneywellScanner,
 
-HoneywellScanner.onBarcodeReadSuccess = (handler) =>
-{
-    subscriptionBarcodeReadSuccess?.remove();
-    subscriptionBarcodeReadSuccess = null;
-    subscriptionBarcodeReadSuccess = barcodeReaderEmitter.addListener(HoneywellScanner.BARCODE_READ_SUCCESS, handler);
+    onBarcodeReadSuccess: (handler) => {
+      subscriptionBarcodeReadSuccess?.remove();
+      subscriptionBarcodeReadSuccess = barcodeReaderEmitter.addListener(
+        NativeHoneywellScanner.BARCODE_READ_SUCCESS,
+        handler
+      );
+    },
+
+    onBarcodeReadFail: (handler) => {
+      subscriptionBarcodeReadFail?.remove();
+      subscriptionBarcodeReadFail = barcodeReaderEmitter.addListener(
+        NativeHoneywellScanner.BARCODE_READ_FAIL,
+        handler
+      );
+    },
+
+    offBarcodeReadSuccess: () => {
+      subscriptionBarcodeReadSuccess?.remove();
+    },
+
+    offBarcodeReadFail: () => {
+      subscriptionBarcodeReadFail?.remove();
+    },
+  };
 }
-
-HoneywellScanner.onBarcodeReadFail = (handler) =>
-{
-    subscriptionBarcodeReadFail?.remove();
-    subscriptionBarcodeReadFail = null;
-    subscriptionBarcodeReadFail = barcodeReaderEmitter.addListener(HoneywellScanner.BARCODE_READ_FAIL, handler);
-}
-
-/**
- * Stop listening for event
- * @param  {String} eventName Name of event one of barcodeReadSuccess, barcodeReadFail
- * @param  {Function} handler Event handler
- */
-HoneywellScanner.offBarcodeReadSuccess = () =>
-{
-    subscriptionBarcodeReadSuccess?.remove();
-};
-HoneywellScanner.offBarcodeReadFail = () =>
-{
-    subscriptionBarcodeReadFail?.remove();
-};
 
 export default HoneywellScanner;
